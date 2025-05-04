@@ -1,7 +1,7 @@
-// ✅ IglooAccess Cloud API Proxy - create-pin.js (OAuth2.0)
-// 使用 Igloohome Cloud API 而非 Developer API，適用於註冊於 access.igloocompany.co 的商業帳戶
+// ✅ IglooAccess Cloud API Proxy - create-pin.js（忽略 SSL 錯誤）
 
 import fetch from 'node-fetch';
+import https from 'https';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -22,6 +22,9 @@ async function handler(req, res) {
 
   const basicAuth = encodeBasicAuth(clientId, clientSecret);
 
+  // 忽略 SSL 憑證（僅限測試階段）
+  const agent = new https.Agent({ rejectUnauthorized: false });
+
   try {
     // Step 1: 取得 access token
     console.log("🔑 正在取得 Access Token...");
@@ -31,7 +34,8 @@ async function handler(req, res) {
         Authorization: `Basic ${basicAuth}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: 'grant_type=client_credentials&scope=igloohomeapi/create-pin-bridge-proxied-job'
+      body: 'grant_type=client_credentials&scope=igloohomeapi/create-pin-bridge-proxied-job',
+      agent
     });
 
     const tokenJson = await tokenResponse.json();
@@ -59,7 +63,8 @@ async function handler(req, res) {
         starts_at: start_time,
         ends_at: end_time,
         name: name
-      })
+      }),
+      agent
     });
 
     const rawPinText = await pinResponse.text();
