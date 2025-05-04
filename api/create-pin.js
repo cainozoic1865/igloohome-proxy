@@ -12,10 +12,7 @@ async function handler(req, res) {
   const IGLOO_CLIENT_ID = process.env.IGLOO_CLIENT_ID;
   const IGLOO_CLIENT_SECRET = process.env.IGLOO_CLIENT_SECRET;
 
-  // 忽略 SSL 憑證過期（僅用於開發階段）
-  const agent = new https.Agent({
-    rejectUnauthorized: false
-  });
+  const agent = new https.Agent({ rejectUnauthorized: false });
 
   try {
     console.log("🔄 正在取得 access token...");
@@ -55,8 +52,16 @@ async function handler(req, res) {
       agent
     });
 
-    const pinData = await pinRes.json();
-    console.log("📥 PIN 建立回應：", pinData);
+    const rawPinText = await pinRes.text();
+    console.log("📄 PIN 建立原始回應：", rawPinText);
+
+    let pinData;
+    try {
+      pinData = JSON.parse(rawPinText);
+    } catch (e) {
+      console.error("🔴 無法解析 JSON，回應不是 JSON：", rawPinText);
+      return res.status(500).json({ error: "Proxy 回傳非 JSON", detail: rawPinText });
+    }
 
     if (!pinRes.ok) {
       return res.status(500).json({ error: "建立 PIN 失敗", detail: pinData });
