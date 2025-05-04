@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import https from 'https';
 
 async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,6 +12,11 @@ async function handler(req, res) {
   const IGLOO_CLIENT_ID = process.env.IGLOO_CLIENT_ID;
   const IGLOO_CLIENT_SECRET = process.env.IGLOO_CLIENT_SECRET;
 
+  // 忽略 SSL 憑證過期（僅用於開發階段）
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
+
   try {
     console.log("🔄 正在取得 access token...");
 
@@ -20,7 +26,8 @@ async function handler(req, res) {
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": "igloohome-railway-proxy"
       },
-      body: `grant_type=client_credentials&client_id=${IGLOO_CLIENT_ID}&client_secret=${IGLOO_CLIENT_SECRET}`
+      body: `grant_type=client_credentials&client_id=${IGLOO_CLIENT_ID}&client_secret=${IGLOO_CLIENT_SECRET}`,
+      agent
     });
 
     const tokenData = await tokenRes.json();
@@ -44,7 +51,8 @@ async function handler(req, res) {
         type: "time_bound",
         starts_at: start_time,
         ends_at: end_time
-      })
+      }),
+      agent
     });
 
     const pinData = await pinRes.json();
