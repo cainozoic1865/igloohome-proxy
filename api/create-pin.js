@@ -35,9 +35,12 @@ async function handler(req, res) {
     }
 
     const accessToken = tokenData.access_token;
-    console.log("🔐 取得 token 成功，準備建立 PIN...");
+    console.log("🔐 取得 token 成功");
 
-    const pinRes = await fetch(`https://api.igloohome.co/v1/devices/${device_uuid}/pin-generate`, {
+    const pinApiUrl = `https://api.igloohome.co/v1/devices/${device_uuid}/pin-generate`;
+    console.log("📤 發送 API 至：", pinApiUrl);
+
+    const pinRes = await fetch(pinApiUrl, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -59,7 +62,7 @@ async function handler(req, res) {
     try {
       pinData = JSON.parse(rawPinText);
     } catch (e) {
-      console.error("🔴 無法解析 JSON，回應不是 JSON：", rawPinText);
+      console.error("🔴 回應不是 JSON，疑似 HTML 錯誤頁：", rawPinText);
       return res.status(500).json({ error: "Proxy 回傳非 JSON", detail: rawPinText });
     }
 
@@ -70,7 +73,7 @@ async function handler(req, res) {
     return res.status(200).json(pinData);
 
   } catch (err) {
-    console.error("🔴 發生錯誤：", err);
+    console.error("🔴 發生例外錯誤：", err);
     return res.status(500).json({ error: "伺服器錯誤", detail: err.message });
   }
 }
